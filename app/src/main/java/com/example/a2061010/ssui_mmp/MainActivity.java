@@ -33,18 +33,22 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         lista_musicas=(ListView)findViewById(R.id.lista_musica);
-        TextView teste=(TextView)findViewById(R.id.textView2);
+
         sharedPreferences = getSharedPreferences(mypreference, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putInt(Duracao,0);
         editor.commit();
+    }
 
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) //
+    {
+        TextView teste=(TextView)findViewById(R.id.textView2);
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)!= PackageManager.PERMISSION_GRANTED) {
-            teste.setText("negou ");
+            teste.setText("Necessita de dar permissoes para aceder aos dados do cartão SD para visualizar o ficheiros existentes. ");
         }
         else {
+            teste.setText("Lista de músicas:");
             final ArrayList<File> cancaos = BuscaMusica(Environment.getExternalStorageDirectory().getAbsoluteFile());
-            teste.setText("aceitou ");
             itens = new String[cancaos.size()];
             for (int i = 0; i < cancaos.size(); i++) {
                 itens[i] = cancaos.get(i).getName().toString().replace("mp3", "").toLowerCase();
@@ -58,8 +62,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-
     }
+
     public ArrayList<File> BuscaMusica(File raiz){// objetivo com base nesta rota vai buscar todos ficheiros de musica
         File[] arquivos=raiz.listFiles();         // recebe lista de arquivos que pertecem a essa rota
         ArrayList<File> ficheiro_musicas= new ArrayList<File>();// basicamente vai ser o array que contem todos ficheiros de musicas
