@@ -2,6 +2,7 @@ package com.example.a2061010.ssui_mmp;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -16,15 +17,16 @@ import java.io.File;
 import java.util.ArrayList;
 
 public class Reprodutor extends AppCompatActivity  implements View.OnClickListener{
-
+    SharedPreferences sharedpreferences;
+    public static final String mypreference = "mypref";
+    public static final String Duracao = "duracaoAtual";
     static MediaPlayer mp;
     ArrayList<File> cancoes;
-    int posicao;
+    int posicao,posicaoAtualPref;
     Uri uri;
     String aux = "";
 
     Thread atualizarSeekBar;
-
     Button btnff, btnfb, btnPv, btnNext, btnPlay, btnPlaylist;
     TextView nome,duracaoCancao, continua;
     SeekBar sb,sk_volume;
@@ -34,6 +36,10 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reprodutor);
+        sharedpreferences = getSharedPreferences(mypreference, Context.MODE_PRIVATE);
+        if (sharedpreferences.contains(Duracao)) {
+            posicaoAtualPref = sharedpreferences.getInt(Duracao, 0);
+        }
 
         btnPlay= (Button) findViewById(R.id.btnPlay);
         btnfb= (Button) findViewById(R.id.btnfb);
@@ -101,6 +107,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
             mp = MediaPlayer.create(getApplication(),uri);
             atualizarSeekBar.start();
             mp.start();
+            mp.seekTo(posicaoAtualPref);
             Volume();
             duracaoCancao.setText(getHRM(mp.getDuration()));
         }catch(Exception e)
@@ -231,6 +238,15 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onDestroy(){
+        SharedPreferences.Editor editor = sharedpreferences.edit();
+        editor.putInt(Duracao,mp.getCurrentPosition());
+        editor.commit();
+        super.onDestroy();
+
     }
 
 }
