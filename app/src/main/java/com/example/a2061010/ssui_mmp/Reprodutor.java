@@ -7,25 +7,32 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.PortUnreachableException;
 import java.util.ArrayList;
 
 public class Reprodutor extends AppCompatActivity  implements View.OnClickListener{
-    SharedPreferences sharedpreferences;
+    /*SharedPreferences sharedpreferences;
     public static final String mypreference = "mypref";
     public static final String Duracao = "duracaoAtual";
+    public static final String Musica = "musica";*/
     static MediaPlayer mp;
     ArrayList<File> cancoes;
     int posicao,posicaoAtualPref;
     Uri uri;
     String aux = "";
-
+    private final UIHandler _handler = new UIHandler();
+    private final UIHandler _handler2 = new UIHandler();
     Thread atualizarSeekBar;
     Button btnff, btnfb, btnPv, btnNext, btnPlay, btnPlaylist;
     TextView nome,duracaoCancao, continua;
@@ -36,10 +43,10 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reprodutor);
-        sharedpreferences = getSharedPreferences(mypreference, Context.MODE_PRIVATE);
+        /*sharedpreferences = getSharedPreferences(mypreference, Context.MODE_PRIVATE);
         if (sharedpreferences.contains(Duracao)) {
             posicaoAtualPref = sharedpreferences.getInt(Duracao, 0);
-        }
+        }*/
 
         btnPlay= (Button) findViewById(R.id.btnPlay);
         btnfb= (Button) findViewById(R.id.btnfb);
@@ -64,36 +71,50 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         atualizarSeekBar = new Thread(){
             @Override
             public void run(){
-
-                int duracao = mp.getDuration();
-                sb.setMax(duracao);
-
-                int posicaoAtual = 0;
-                int execucao = 0;
-
                 boolean ban=false;
 
-                while (posicaoAtual < duracao)
-                {
-                    try{
-                        sleep(500);
-                        posicaoAtual = mp.getCurrentPosition();
-                        sb.setProgress(posicaoAtual);
-                        execucao = sb.getProgress();
-                        aux = getHRM(execucao);
-                        continua.setText(aux.toString().trim());
 
-                    }catch (Exception e)
-                    {
-                        continua.setText(aux);
+                while(ban == false) {
+                    while(mp == null)
+                    {}
+                    int duracao = mp.getDuration();
+                    sb.setMax(duracao);
+
+                    int posicaoAtual = 0;
+                    //int execucao = 0;
+                    while (posicaoAtual < duracao-125) {
+
+                        try {
+                            sleep(500);
+                            posicaoAtual = mp.getCurrentPosition();
+                            sb.setProgress(posicaoAtual);
+                            //execucao = sb.getProgress();
+                            //aux = getHRM(execucao);
+                            Message msg2 = new Message();
+                            msg2.arg1 = 2;
+                            _handler2.sendMessage(msg2);
+                            //continua.setText(aux.toString().trim());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            posicaoAtual = duracao;
+                        }
+
                     }
-
+                    Message msg1 = new Message();
+                    msg1.arg1 = 1;
+                    _handler.sendMessage(msg1);
+                    try {
+                        sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         };
 
         if(mp!= null)
         {
+            if(mp.isPlaying())
             mp.stop();
         }
         try
@@ -101,7 +122,10 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
             Intent i = getIntent();
             Bundle b = i.getExtras();
             cancoes = (ArrayList) b.getParcelableArrayList("cancoes");
-            posicao = (int) b.getInt("pos",0);
+            //if(!sharedpreferences.contains(Musica))
+                posicao = (int) b.getInt("pos",0);
+           /* else
+                posicao = sharedpreferences.getInt(Musica,0);*/
             uri = Uri.parse(cancoes.get(posicao).toString());
             nome.setText(cancoes.get(posicao).getName().toString());
             mp = MediaPlayer.create(getApplication(),uri);
@@ -118,7 +142,6 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
             }
 
             @Override
@@ -134,8 +157,23 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         });
     }
 
-
-
+    public class UIHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg){
+            if(msg.arg1 == 1)
+            {
+                NextCancao();
+                //atualizarSeekBar.start();
+            }
+            if(msg.arg1 == 2)
+            {
+                int execucao;
+                execucao = sb.getProgress();
+                aux = getHRM(execucao);
+                continua.setText(aux.toString().trim());
+            }
+        }
+    }
     private String getHRM(int miliseconds){
         int seconds = (int) (miliseconds/1000) % 60;
         int minutes = (int) ((miliseconds/ (1000*60)) % 60);
@@ -177,15 +215,19 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     }
 
     public void NextCancao(){
+        if(mp.isPlaying())
         mp.stop();
 
+        mp.release();
+        mp = null;
         posicao = (posicao +1) % cancoes.size();
         nome.setText(cancoes.get(posicao).getName().toString());
 
         uri = Uri.parse(cancoes.get(posicao).toString());
         mp = MediaPlayer.create(getApplicationContext(),uri);
-
         mp.start();
+
+
         sb.setMax(0);
         duracaoCancao.setText(getHRM(mp.getDuration()));
         try{
@@ -195,8 +237,13 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         }
     }
 
+
+
     public void PrevCancao(){
+        if(mp.isPlaying())
         mp.stop();
+        mp.release();
+        mp = null;
         if(posicao-1<0){
             posicao = cancoes.size()-1;
         } else{
@@ -205,10 +252,17 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         nome.setText(cancoes.get(posicao).getName().toString());
         uri = Uri.parse(cancoes.get(posicao).toString());
         mp = MediaPlayer.create(getApplicationContext(),uri);
-        mp.start();
+
+
+            mp.start();
+
         sb.setMax(0);
         duracaoCancao.setText(getHRM(mp.getDuration()));
-        sb.setMax(mp.getDuration());
+        try{
+            sb.setMax(mp.getDuration());
+        }catch (Exception e){
+
+        }
     }
 
     public void Volume(){
@@ -242,9 +296,10 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
 
     @Override
     public void onDestroy(){
-        SharedPreferences.Editor editor = sharedpreferences.edit();
+       /* SharedPreferences.Editor editor = sharedpreferences.edit();
         editor.putInt(Duracao,mp.getCurrentPosition());
-        editor.commit();
+        editor.putInt(Musica,posicao);
+        editor.apply();*/
         super.onDestroy();
 
     }

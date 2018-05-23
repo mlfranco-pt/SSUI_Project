@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -24,6 +26,7 @@ public class MainActivity extends AppCompatActivity {
     SharedPreferences sharedPreferences;
     public static final String mypreference = "mypref";
     public static final String Duracao = "duracaoAtual";
+    public static final String Musica = "musica";
     ListView lista_musicas;
     String[] itens;
     @Override
@@ -34,10 +37,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         lista_musicas=(ListView)findViewById(R.id.lista_musica);
 
-        sharedPreferences = getSharedPreferences(mypreference, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt(Duracao,0);
-        editor.commit();
+
     }
 
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) //
@@ -52,12 +52,24 @@ public class MainActivity extends AppCompatActivity {
             itens = new String[cancaos.size()];
             for (int i = 0; i < cancaos.size(); i++) {
                 itens[i] = cancaos.get(i).getName().toString().replace("mp3", "").toLowerCase();
+                Uri uri = Uri.parse(cancaos.get(i).getAbsolutePath());
+                MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+                mmr.setDataSource(getApplicationContext(),uri);
+                String durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                int millSecond = Integer.parseInt(durationStr);
+                Number seconds = millSecond/1000;
+                itens[i] = itens[i]+" "+seconds.floatValue()+" s";
             }
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.cancao, R.id.textView, itens);
+            //ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.cancao, R.id.textView, itens);
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.activity_main,R.id.textView2,itens); //adaptar o array de musicas para depois utilizar na listview. É necessário dar uma textview para poder instanciar cada item na listview
             lista_musicas.setAdapter(adapter);
             lista_musicas.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    sharedPreferences = getSharedPreferences(mypreference, Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.clear();
+                    editor.commit();
                     startActivity(new Intent(getApplicationContext(),Reprodutor.class).putExtra("pos",position).putExtra("cancoes",cancaos));
                 }
             });
