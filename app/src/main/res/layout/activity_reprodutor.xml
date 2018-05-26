@@ -119,13 +119,6 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <ImageButton
-            android:id="@+id/btnNext"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:src="@drawable/next" />
-
-        <ImageButton
             android:id="@+id/btnPv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -146,6 +139,13 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:src="@drawable/pause" />
+
+        <ImageButton
+            android:id="@+id/btnNext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@drawable/next" />
 
 
         <ImageButton
