@@ -3,16 +3,22 @@ package com.example.a2061010.ssui_mmp;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.DrawableRes;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -33,11 +39,55 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     String aux = "";
     private final UIHandler _handler = new UIHandler();
     private final UIHandler _handler2 = new UIHandler();
-    Thread atualizarSeekBar;
-    Button btnff, btnfb, btnPv, btnNext, btnPlay, btnPlaylist;
+    ImageButton btnff,btnPv, btnfb, btnNext, btnPlay;
+    ImageButton btnPlaylist;
     TextView nome,duracaoCancao, continua;
     SeekBar sb,sk_volume;
     AudioManager audioManager;
+    SensorManager sensorManager;
+    Sensor proxSensor, gyroscopeSensor;
+    SensorEventListener SensorListener;
+    private static final String MODULE = "Reprodutor";
+    boolean ban=false;
+    int posicaoAtual = 0;
+    int duracao = 0;
+    Thread atualizarSeekBar = new Thread(){
+        @Override
+        public void run() {
+                //Log.i(MODULE,"--------------------------duracao----------------------------: "+duracao);
+                posicaoAtual = 0;
+                //int execucao = 0;
+                ban = false;
+                while (posicaoAtual < (duracao - 60) && ban != true){
+                    try {
+                        sleep(100);
+                        posicaoAtual = mp.getCurrentPosition();
+                        //      Log.i(MODULE,"????????????????posicaoAtual: "+posicaoAtual);
+                        sb.setProgress(posicaoAtual);
+                        //execucao = sb.getProgress();
+                        //aux = getHRM(execucao);
+                        Message msg2 = new Message();
+                        msg2.arg1 = 2;
+                        _handler2.sendMessage(msg2);
+                        //continua.setText(aux.toString().trim());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        //posicaoAtual = duracao;
+                    }
+
+                }
+            try {
+                sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+                Log.i(MODULE,"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<atual: "+posicaoAtual);
+                Message msg1 = new Message();//next cancao
+                msg1.arg1 = 1;
+                _handler.sendMessage(msg1);
+            }
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,12 +98,16 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
             posicaoAtualPref = sharedpreferences.getInt(Duracao, 0);
         }*/
 
-        btnPlay= (Button) findViewById(R.id.btnPlay);
-        btnfb= (Button) findViewById(R.id.btnfb);
-        btnff = (Button) findViewById(R.id.btnff);
-        btnPv = (Button) findViewById(R.id.btnPv);
-        btnNext= (Button) findViewById(R.id.btnNext);
-        btnPlaylist= (Button) findViewById(R.id.btn_playlist);
+        sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        proxSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+        gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+
+        btnPlay= (ImageButton) findViewById(R.id.btnPlay);
+        btnfb= (ImageButton) findViewById(R.id.btnfb);
+        btnff = (ImageButton) findViewById(R.id.btnff);
+        btnPv = (ImageButton) findViewById(R.id.btnPv);
+        btnNext= (ImageButton) findViewById(R.id.btnNext);
+        btnPlaylist= (ImageButton) findViewById(R.id.btn_playlist);
 
         nome = (TextView) findViewById(R.id.nome);
         duracaoCancao = (TextView) findViewById(R.id.tempo2);
@@ -68,7 +122,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
 
         sb = (SeekBar) findViewById(R.id.sb);
 
-        atualizarSeekBar = new Thread(){
+        /*atualizarSeekBar = new Thread(){
             @Override
             public void run(){
                 boolean ban=false;
@@ -77,16 +131,20 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                 while(ban == false) {
                     while(mp == null)
                     {}
-                    int duracao = mp.getDuration();
-                    sb.setMax(duracao);
+                    int duracao = 0;
+                            duracao = mp.getDuration();
+                        sb.setMax(duracao);
 
+                    duracao -= 60;
+                    Log.i(MODULE,"--------------------------duracao----------------------------: "+duracao);
                     int posicaoAtual = 0;
                     //int execucao = 0;
-                    while (posicaoAtual < duracao-125) {
+                    while (posicaoAtual < (duracao-60)) {
 
                         try {
-                            sleep(500);
+                            sleep(100);
                             posicaoAtual = mp.getCurrentPosition();
+                      //      Log.i(MODULE,"????????????????posicaoAtual: "+posicaoAtual);
                             sb.setProgress(posicaoAtual);
                             //execucao = sb.getProgress();
                             //aux = getHRM(execucao);
@@ -96,21 +154,22 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                             //continua.setText(aux.toString().trim());
                         } catch (Exception e) {
                             e.printStackTrace();
-                            posicaoAtual = duracao;
+                            //posicaoAtual = duracao;
                         }
 
                     }
-                    Message msg1 = new Message();
+                    Log.i(MODULE,"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<atual: "+posicaoAtual);
+                    Message msg1 = new Message();//next cancao
                     msg1.arg1 = 1;
                     _handler.sendMessage(msg1);
                     try {
-                        sleep(1000);
+                        sleep(100);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
             }
-        };
+        };*/
 
         if(mp!= null)
         {
@@ -129,7 +188,9 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
             uri = Uri.parse(cancoes.get(posicao).toString());
             nome.setText(cancoes.get(posicao).getName().toString());
             mp = MediaPlayer.create(getApplication(),uri);
+            duracao = mp.getDuration();
             atualizarSeekBar.start();
+            sb.setMax(duracao);
             mp.start();
             mp.seekTo(posicaoAtualPref);
             Volume();
@@ -189,10 +250,10 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         switch (id){
             case R.id.btnPlay:
                 if(mp.isPlaying()){
-                    btnPlay.setText("play");
+                    btnPlay.setImageResource(R.drawable.play);
                     mp.pause();
-                }else{
-                    btnPlay.setText("pause");
+                }else if(mp != null){
+                    btnPlay.setImageResource(R.drawable.pause);
                     mp.start();
                 }
                 break;
@@ -203,6 +264,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                 mp.seekTo(mp.getCurrentPosition() - 5000);
                 break;
             case R.id.btnNext:
+                ban = true;
                 NextCancao();
                 break;
             case R.id.btnPv:
@@ -235,6 +297,9 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         }catch (Exception e){
 
         }
+        duracao = mp.getDuration();
+        sb.setMax(duracao);
+        atualizarSeekBar.start();
     }
 
 
@@ -295,13 +360,70 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     }
 
     @Override
+    public void onResume(){
+        super.onResume();
+        // Create listener
+            SensorListener = new SensorEventListener() {
+            @Override
+            public void onSensorChanged(SensorEvent sensorEvent) {
+                /*if(sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
+                    if(sensorEvent.values[0] <= 2)
+                    {
+                        if(mp.isPlaying()) {
+                            btnPlay.setImageResource(R.drawable.play);
+                            mp.pause();
+                        }
+                    }
+                    if(sensorEvent.values[0] > 2)
+                    {
+                        if(mp != null) {
+                            btnPlay.setImageResource(R.drawable.pause);
+                            mp.start();
+                        }
+                    }
+                }*/
+                if(sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE)
+                {
+
+                    //Log.i(MODULE,"X: "+sensorEvent.values[0]);
+                    //Log.i(MODULE,"Y: "+sensorEvent.values[1]);
+                    //Log.i(MODULE,"Z: "+sensorEvent.values[2]);
+                }
+            }
+
+            @Override
+            public void onAccuracyChanged(Sensor sensor, int i) {
+            }
+        };
+
+// Register it, specifying the polling interval in
+// microseconds
+        /*sensorManager.registerListener(SensorListener,
+                proxSensor, 500);*/
+        sensorManager.registerListener(SensorListener,gyroscopeSensor,SensorManager.SENSOR_DELAY_NORMAL);
+
+    }
+
+    @Override
+    public void onPause(){
+        super.onPause();
+        //sensorManager.unregisterListener(proximitySensorListener);
+    }
+
+    @Override
+    public void onStop(){
+        super.onStop();
+
+    }
+
+
+    @Override
     public void onDestroy(){
        /* SharedPreferences.Editor editor = sharedpreferences.edit();
         editor.putInt(Duracao,mp.getCurrentPosition());
         editor.putInt(Musica,posicao);
         editor.apply();*/
         super.onDestroy();
-
     }
 
 }
