@@ -28,10 +28,6 @@ import java.net.PortUnreachableException;
 import java.util.ArrayList;
 
 public class Reprodutor extends AppCompatActivity  implements View.OnClickListener{
-    /*SharedPreferences sharedpreferences;
-    public static final String mypreference = "mypref";
-    public static final String Duracao = "duracaoAtual";
-    public static final String Musica = "musica";*/
     static MediaPlayer mp;
     ArrayList<File> cancoes;
     int posicao,posicaoAtualPref;
@@ -45,47 +41,124 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     SeekBar sb,sk_volume;
     AudioManager audioManager;
     SensorManager sensorManager;
-    Sensor proxSensor, gyroscopeSensor;
+    Sensor proxSensor, gyroscopeSensor, accelerometerSensor, geoMagneticSensor;
     SensorEventListener SensorListener;
     private static final String MODULE = "Reprodutor";
     boolean ban=false;
     int posicaoAtual = 0;
     int duracao = 0;
+    private final float[] accelerometer = new float[3];
+    private final float[] magnetic = new float[3];
+    Thread faceUpDown = new Thread(){
+        @Override
+        public void run(){ //verifica se num certo intervalo de tempo o telemovel esteve sempre virado para baixo
+          while(true)
+          {
+             try {
+                 final float[] rotationMatrix = new float[9];
+                 sensorManager.getRotationMatrix(rotationMatrix, null, accelerometer, magnetic);
+                 int inclination = (int) Math.round(Math.toDegrees(Math.acos(rotationMatrix[8])));
+                 Log.i(MODULE, "inclinacao:   " + inclination);
+                 if (inclination < 160) {
+                     if (!mp.isPlaying()) mp.start();
+                     Log.i(MODULE, "PARA CIMA");
+                 } else {
+                     if(mp.isPlaying())mp.pause();
+                     Log.i(MODULE, "PARA BAIXO");
+                 }
+             }catch(Exception e)
+             {
+                 e.printStackTrace();
+             }
+          }
+
+            /*  boolean t = true;
+            int iteracoes = 0;
+            int[] amostras = new int[20];
+            boolean has = false;
+            try {
+                while (t) {
+                    sleep(25);
+                    if (iteracoes >= 19) {
+                        for (int i=0;i<iteracoes;i++) {
+                               if(amostras[i] <= 150)
+                                   has = true;
+                        }
+                        if(!has)
+                        {
+                            mp.pause();
+                        }
+                        else
+                        {
+                            if(!mp.isPlaying())mp.start();
+                        }
+                        has = false;
+                        iteracoes = 0;
+                    } else {
+                        final float[] rotationMatrix = new float[9];
+                        sensorManager.getRotationMatrix(rotationMatrix, null, accelerometer, magnetic);
+                        int inclination = (int) Math.round(Math.toDegrees(Math.acos(rotationMatrix[8])));
+                        amostras[iteracoes] = inclination;
+                        Log.i(MODULE,"inclinacao:   "+amostras[iteracoes]);
+                        iteracoes++;
+
+                        /*if (inclination < 90) {
+                            if (!mp.isPlaying()) mp.start();
+                            Log.i(MODULE, "PARA CIMA");
+                        } else {
+                            mp.pause();
+                            Log.i(MODULE, "PARA BAIXO");
+                        }
+                        final float[] orientationAngles = new float[3];
+                        sensorManager.getOrientation(rotationMatrix, orientationAngles);
+                        Log.i(MODULE, "----------------------------");
+                        Log.i(MODULE, "valor0  " + orientationAngles[0]);
+                        Log.i(MODULE, "valor1  " + orientationAngles[1]);
+                        Log.i(MODULE, "valor2  " + orientationAngles[2]);
+                        Log.i(MODULE, "----------------------------");
+
+                    }
+                }
+            }catch (Exception e)
+            {
+                e.printStackTrace();
+            }*/
+        }
+
+    };
+
     Thread atualizarSeekBar = new Thread(){
         @Override
         public void run() {
-                //Log.i(MODULE,"--------------------------duracao----------------------------: "+duracao);
-                posicaoAtual = 0;
-                //int execucao = 0;
-                ban = false;
-                while (posicaoAtual < (duracao - 60) && ban != true){
-                    try {
-                        sleep(100);
-                        posicaoAtual = mp.getCurrentPosition();
-                        //      Log.i(MODULE,"????????????????posicaoAtual: "+posicaoAtual);
-                        sb.setProgress(posicaoAtual);
-                        //execucao = sb.getProgress();
-                        //aux = getHRM(execucao);
-                        Message msg2 = new Message();
-                        msg2.arg1 = 2;
-                        _handler2.sendMessage(msg2);
-                        //continua.setText(aux.toString().trim());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        //posicaoAtual = duracao;
-                    }
-
+            int duracaoThread = duracao;
+            posicaoAtual = 0;
+            ban = false;
+            while (posicaoAtual < (duracaoThread - 60) && !ban) {
+                try {
+                    sleep(100);
+                    posicaoAtual = mp.getCurrentPosition();
+                    sb.setProgress(posicaoAtual);
+                    Message msg2 = new Message();
+                    msg2.arg1 = 2;
+                    _handler2.sendMessage(msg2);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            try {
-                sleep(500);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
-                Log.i(MODULE,"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<atual: "+posicaoAtual);
+            if (posicaoAtual > (duracaoThread-100)) {
+                try {
+                    sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 Message msg1 = new Message();//next cancao
                 msg1.arg1 = 1;
                 _handler.sendMessage(msg1);
+
             }
+            Log.i(MODULE, "ACABOU a thread: -------->>>>>>>>>>" + atualizarSeekBar.getId());
+        }
+
     };
 
 
@@ -97,10 +170,12 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         if (sharedpreferences.contains(Duracao)) {
             posicaoAtualPref = sharedpreferences.getInt(Duracao, 0);
         }*/
-
+        faceUpDown.start();
         sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         proxSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        geoMagneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
 
         btnPlay= (ImageButton) findViewById(R.id.btnPlay);
         btnfb= (ImageButton) findViewById(R.id.btnfb);
@@ -170,7 +245,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                 }
             }
         };*/
-
+        ban = true;
         if(mp!= null)
         {
             if(mp.isPlaying())
@@ -268,6 +343,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                 NextCancao();
                 break;
             case R.id.btnPv:
+                ban = true;
                 PrevCancao();
                 break;
             case R.id.btn_playlist:
@@ -328,6 +404,9 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         }catch (Exception e){
 
         }
+        duracao = mp.getDuration();
+        sb.setMax(duracao);
+        atualizarSeekBar.start();
     }
 
     public void Volume(){
@@ -366,7 +445,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
             SensorListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent sensorEvent) {
-                /*if(sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
+                 /*if(sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
                     if(sensorEvent.values[0] <= 2)
                     {
                         if(mp.isPlaying()) {
@@ -389,6 +468,26 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                     //Log.i(MODULE,"Y: "+sensorEvent.values[1]);
                     //Log.i(MODULE,"Z: "+sensorEvent.values[2]);
                 }
+                if(sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
+                {
+                    System.arraycopy(sensorEvent.values,0,accelerometer,0,accelerometer.length);
+                    /*Log.i(MODULE, "acelerometro: "+sensorEvent.values[2]);
+                    if(sensorEvent.values[2] >= -9)
+                    {
+                        if(!mp.isPlaying())
+                        {
+                            mp.start();
+                        }
+                    }
+                    else
+                    {
+                        mp.pause();
+                    }*/
+                }
+                if(sensorEvent.sensor.getType() == Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR)
+                {
+                    System.arraycopy(sensorEvent.values,0,magnetic,0,magnetic.length);
+                }
             }
 
             @Override
@@ -401,7 +500,8 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         /*sensorManager.registerListener(SensorListener,
                 proxSensor, 500);*/
         sensorManager.registerListener(SensorListener,gyroscopeSensor,SensorManager.SENSOR_DELAY_NORMAL);
-
+        sensorManager.registerListener(SensorListener,accelerometerSensor,SensorManager.SENSOR_DELAY_NORMAL);
+        sensorManager.registerListener(SensorListener,geoMagneticSensor,SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
@@ -413,7 +513,6 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     @Override
     public void onStop(){
         super.onStop();
-
     }
 
 
@@ -424,6 +523,8 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         editor.putInt(Musica,posicao);
         editor.apply();*/
         super.onDestroy();
-    }
+        ban = true;
+        mp.stop();
+            }
 
 }
