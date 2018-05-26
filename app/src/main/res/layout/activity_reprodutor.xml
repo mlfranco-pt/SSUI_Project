@@ -83,36 +83,35 @@
             android:id="@+id/btnPv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="0dp"
-            android:src="@drawable/ic_previous"/>
+            android:src="@drawable/next"
+            android:rotation="180"/>
 
-        <Button
+        <ImageButton
             android:id="@+id/btnfb"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="0dp"
-            android:text="atras"/>
+            android:layout_width="75dp"
+            android:layout_height="50dp"
+            android:src="@drawable/rewind" />
 
-        <Button
+        <ImageButton
             android:id="@+id/btnPlay"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="0dp"
-            android:text="Play"/>
+            android:layout_marginBottom="5dp"
+            android:src="@drawable/play"/>
 
 
-        <Button
+        <ImageButton
             android:id="@+id/btnff"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="0dp"
-            android:text="Frente"/>
+            android:layout_marginBottom="5dp"
+            android:src="@drawable/fast_forward"/>
 
-        <Button
+        <ImageButton
             android:id="@+id/btnNext"
-            android:drawableEnd="@drawable/ic_next"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="0dp"/>
+            android:layout_marginBottom="5dp"
+            android:src="@drawable/next"/>
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>
