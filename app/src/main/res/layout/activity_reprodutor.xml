@@ -77,41 +77,55 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="bottom|center"
-        android:orientation="horizontal">
+        android:orientation="vertical" >
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.25">
 
-        <ImageButton
-            android:id="@+id/btnPv"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/next"
-            android:rotation="180"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="bottom|center"
+            android:orientation="horizontal">
 
-        <ImageButton
-            android:id="@+id/btnfb"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/rewind" />
+            <ImageButton
+                android:id="@+id/btnPv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:rotation="180"
+                android:src="@drawable/next" />
 
-        <ImageButton
-            android:id="@+id/btnPlay"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            <ImageButton
+                android:id="@+id/btnfb"
+                android:layout_width="wrap_content"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:src="@drawable/rewind" />
 
-            android:src="@drawable/play"/>
+            <ImageButton
+                android:id="@+id/btnPlay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:src="@drawable/pause" />
 
 
-        <ImageButton
-            android:id="@+id/btnff"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            <ImageButton
+                android:id="@+id/btnff"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:src="@drawable/fast_forward" />
 
-            android:src="@drawable/fast_forward"/>
-
-        <ImageButton
-            android:id="@+id/btnNext"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/next"/>
+            <ImageButton
+                android:id="@+id/btnNext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:src="@drawable/next" />
+        </LinearLayout>
+    </FrameLayout>
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>
