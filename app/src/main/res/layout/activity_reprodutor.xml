@@ -24,7 +24,8 @@
         android:layout_height="wrap_content"
         android:src="@drawable/ic_playlist"
         android:text="Voltar à lista"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tempo"
@@ -53,10 +54,10 @@
 
     <TextView
         android:id="@+id/nome"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="208dp"
-        android:layout_marginStart="16dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="16dp"
         android:backgroundTintMode="multiply"
         android:fontFamily="casual"
@@ -74,22 +75,39 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="32dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btn_playlist" />
+        app:layout_constraintTop_toBottomOf="@+id/nome" />
 
     <TextView
         android:id="@+id/audio"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginStart="16dp"
         android:background="#64000000"
         android:text="Volume"
         android:textColor="@android:color/background_light"
         app:layout_constraintBottom_toTopOf="@+id/sbAudio"
+        app:layout_constraintEnd_toStartOf="@+id/btn_playlist"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageView
+        android:id="@+id/imgvinil"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1"
+        app:layout_constraintBottom_toTopOf="@+id/sb"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sbAudio"
+        app:srcCompat="@drawable/vinyl" />
 
     <LinearLayout
         android:id="@+id/linearLayout"
@@ -99,6 +117,13 @@
         android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnNext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@drawable/next" />
 
         <ImageButton
             android:id="@+id/btnPv"
@@ -130,12 +155,6 @@
             android:layout_weight="1"
             android:src="@drawable/fast_forward" />
 
-        <ImageButton
-            android:id="@+id/btnNext"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:src="@drawable/next" />
     </LinearLayout>
 
 
