@@ -33,12 +33,12 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:layout_marginStart="8dp"
+        android:background="#64000000"
         android:text="TextView"
         android:textColor="@android:color/background_light"
         android:textSize="14sp"
         app:layout_constraintBottom_toTopOf="@+id/sb"
-        app:layout_constraintStart_toStartOf="@+id/sb"
-        tools:background="#64000000" />
+        app:layout_constraintStart_toStartOf="@+id/sb" />
 
     <TextView
         android:id="@+id/tempo2"
@@ -74,25 +74,24 @@
         android:id="@+id/sbAudio"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="24dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/nome" />
+        app:layout_constraintStart_toEndOf="@+id/audio"
+        app:layout_constraintTop_toBottomOf="@+id/btn_playlist" />
 
     <TextView
         android:id="@+id/audio"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginEnd="16dp"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
         android:background="#64000000"
         android:text="Volume"
         android:textColor="@android:color/background_light"
-        app:layout_constraintBottom_toTopOf="@+id/sbAudio"
-        app:layout_constraintEnd_toStartOf="@+id/btn_playlist"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_playlist" />
 
     <ImageView
         android:id="@+id/imgvinil"
