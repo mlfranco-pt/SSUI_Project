@@ -56,6 +56,9 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     private final float[] magnetic = new float[3];
     private float[] dadosAcelerometro = new float[20];
     int ia = 0;
+    int timeAcelerometro1 = 0;
+    int timeAcelerometro2 = 0;
+    float historiaAcelerometro;
     Thread faceUpDown = new Thread(){
         @Override
         public void run(){ //verifica se num certo intervalo de tempo o telemovel esteve sempre virado para baixo
@@ -168,6 +171,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
 
             }
             Log.i(MODULE, "ACABOU a thread: -------->>>>>>>>>>" + atualizarSeekBar.getId());
+            this.interrupt();
         }
 
     };
@@ -482,7 +486,8 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                 if(sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
                 {
                     System.arraycopy(sensorEvent.values,0,accelerometer,0,accelerometer.length);
-                    Log.i(MODULE, "acelerometro: "+sensorEvent.values[2]);
+                    //Log.i(MODULE,"ZZZZZZZZZ: "+sensorEvent.values[2]);
+
                     dadosAcelerometro[ia] = sensorEvent.values[2];
                     ia++;
                     if(ia >= 7)
@@ -503,6 +508,30 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                             if(!mp.isPlaying()) mp.start();
                         }
                     }
+                    if(timeAcelerometro1 == 5) {
+                        historiaAcelerometro = sensorEvent.values[0];
+                    }
+
+                    if(timeAcelerometro2 >= 10)
+                    {
+                        float agora = sensorEvent.values[0];
+                        float dif = historiaAcelerometro - agora;
+                        if (dif > 2) {
+                            ban = true;
+                            NextCancao();
+                        }
+                        if (dif < -2) {
+                            ban = true;
+                            PrevCancao();
+                        }
+                        Log.i(MODULE,"antes: "+historiaAcelerometro+"                 depois: "+sensorEvent.values[0]+"       dif: "+dif);
+                        timeAcelerometro1 = 0;
+                        timeAcelerometro2 = 0;
+                    }
+                    timeAcelerometro1++;
+                    timeAcelerometro2++;
+
+
 
                 }
                 if(sensorEvent.sensor.getType() == Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR)
