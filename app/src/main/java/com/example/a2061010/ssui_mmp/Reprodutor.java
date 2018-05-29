@@ -20,6 +20,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -44,6 +45,9 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     SensorManager sensorManager;
     Sensor proxSensor, gyroscopeSensor, accelerometerSensor, geoMagneticSensor;
     SensorEventListener SensorListener;
+    ImageView imgvinil;
+
+
     private static final String MODULE = "Reprodutor";
     boolean ban=false;
     int posicaoAtual = 0;
@@ -133,17 +137,21 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     Thread atualizarSeekBar = new Thread(){
         @Override
         public void run() {
+            imgvinil = (ImageView)findViewById(R.id.imgvinil);
             int duracaoThread = duracao;
+            float angle = 0;
             posicaoAtual = 0;
             ban = false;
             while (posicaoAtual < (duracaoThread - 60) && !ban) {
                 try {
                     sleep(100);
+                    imgvinil.setRotation((float) 45.0);
                     posicaoAtual = mp.getCurrentPosition();
                     sb.setProgress(posicaoAtual);
                     Message msg2 = new Message();
                     msg2.arg1 = 2;
                     _handler2.sendMessage(msg2);
+                    imgvinil.setRotation((float) ++angle);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
