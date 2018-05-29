@@ -2,6 +2,7 @@ package com.example.a2061010.ssui_mmp;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -57,7 +58,8 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     int timeAcelerometro1 = 0;
     int timeAcelerometro2 = 0;
     float historiaAcelerometro;
-
+    double anguloAcelerometro = 0;
+    int timeverifica = 0;
     Thread atualizarSeekBar = new Thread(){
         @Override
         public void run() {
@@ -344,29 +346,37 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                             if(!mp.isPlaying()) mp.start();
                         }
                     }
-                    if(timeAcelerometro1 == 5) {
-                        historiaAcelerometro = sensorEvent.values[0];
-                        Log.i(MODULE,"TIME1111111111111111111111");
-                    }
-                    if(timeAcelerometro2 >= 10)
-                    {
-                        float agora = sensorEvent.values[0];
-                        float dif = historiaAcelerometro - agora;
-                        if (dif > 10) {
-                            ban = true;
-                            NextCancao();
+                    //if(sensorEvent.values[0] < -25 ||sensorEvent.values[0] > 25)
+                    //Log.i(MODULE,"acele: "+sensorEvent.values[0]);
+                    //Log.i(MODULE,"angulo:   "+ Math.atan2(sensorEvent.values[0], sensorEvent.values[1])/(Math.PI/180));
+                    if(timeverifica > 20) {
+                        if (timeAcelerometro1 == 1) {
+                            historiaAcelerometro = sensorEvent.values[0];
                         }
-                        if (dif < -10) {
-                            ban = true;
-                            PrevCancao();
+                        if (timeAcelerometro2 >= 2) {
+                            float agora = sensorEvent.values[0];
+                            float dif = historiaAcelerometro - agora;
+                            anguloAcelerometro = Math.atan2(historiaAcelerometro, sensorEvent.values[1])/(Math.PI/180);
+                            Log.i(MODULE, "angulo:  "+anguloAcelerometro+"       dif: " + dif);
+                            if (dif > 15 && anguloAcelerometro > 15) {
+                                ban = true;
+                                NextCancao();
+                                timeverifica = 0;
+
+                            }
+                            if (dif < -15 && anguloAcelerometro < -15) {
+                                ban = true;
+                                PrevCancao();
+                                timeverifica = 0;
+                               // Log.i(MODULE, "antes: " + historiaAcelerometro + "                 depois: " + sensorEvent.values[0] + "       dif: " + dif);
+                            }
+                            timeAcelerometro1 = 0;
+                            timeAcelerometro2 = 0;
                         }
-                        Log.i(MODULE,"antes: "+historiaAcelerometro+"                 depois: "+sensorEvent.values[0]+"       dif: "+dif);
-                        timeAcelerometro1 = 0;
-                        timeAcelerometro2 = 0;
-                        Log.i(MODULE,"TIME22222222222222222222");
+                        timeAcelerometro1++;
+                        timeAcelerometro2++;
                     }
-                    timeAcelerometro1++;
-                    timeAcelerometro2++;
+                    timeverifica++;
                 }
             }
 
