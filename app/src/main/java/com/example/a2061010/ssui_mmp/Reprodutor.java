@@ -47,7 +47,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     SensorEventListener SensorListener;
     ImageView imgvinil;
 
-
+    float angle = 0;
     private static final String MODULE = "Reprodutor";
     boolean ban=false;
     int posicaoAtual = 0;
@@ -142,19 +142,24 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         public void run() {
             imgvinil = (ImageView)findViewById(R.id.imgvinil);
             int duracaoThread = duracao;
-            float angle = 0;
             posicaoAtual = 0;
             ban = false;
+            int div = 0;
+            try{div = 360/(duracaoThread/1000);}catch(Exception e){e.printStackTrace();}
+            if(div == 0) div = 1;
+            Message msg3 = new Message();
+            msg3.arg1 = 3;
+            _handler.sendMessage(msg3);
             while (posicaoAtual < (duracaoThread - 60) && !ban) {
                 try {
                     sleep(100);
-                    imgvinil.setRotation((float) 45.0);
                     posicaoAtual = mp.getCurrentPosition();
                     sb.setProgress(posicaoAtual);
                     Message msg2 = new Message();
                     msg2.arg1 = 2;
+                    msg2.arg2 = div;
                     _handler2.sendMessage(msg2);
-                    imgvinil.setRotation((float) ++angle);
+                   // imgvinil.setRotation((float) ++angle);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -168,10 +173,8 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                 Message msg1 = new Message();//next cancao
                 msg1.arg1 = 1;
                 _handler.sendMessage(msg1);
-
             }
             Log.i(MODULE, "ACABOU a thread: -------->>>>>>>>>>" + atualizarSeekBar.getId());
-            this.interrupt();
         }
 
     };
@@ -322,6 +325,12 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                 execucao = sb.getProgress();
                 aux = getHRM(execucao);
                 continua.setText(aux.toString().trim());
+                angle += msg.arg2;
+                imgvinil.setRotation((float) angle);
+            }
+            if(msg.arg1 == 3)
+            {
+                imgvinil.setRotation((float) 45.0);
             }
         }
     }
@@ -355,10 +364,12 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                 break;
             case R.id.btnNext:
                 ban = true;
+                atualizarSeekBar.interrupt();
                 NextCancao();
                 break;
             case R.id.btnPv:
                 ban = true;
+                atualizarSeekBar.interrupt();
                 PrevCancao();
                 break;
             case R.id.btn_playlist:
@@ -456,6 +467,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     @Override
     public void onResume(){
         super.onResume();
+        //if(mp != null && !mp.isPlaying()) mp.start();
         // Create listener
             SensorListener = new SensorEventListener() {
             @Override
@@ -508,7 +520,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                             if(!mp.isPlaying()) mp.start();
                         }
                     }
-                    if(timeAcelerometro1 == 5) {
+                   /* if(timeAcelerometro1 == 5) {
                         historiaAcelerometro = sensorEvent.values[0];
                     }
 
@@ -532,7 +544,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                     timeAcelerometro2++;
 
 
-
+*/
                 }
                 if(sensorEvent.sensor.getType() == Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR)
                 {
@@ -555,13 +567,19 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     }
 
     @Override
-    public void onPause(){
+    public void onPause() {
+        atualizarSeekBar.interrupt();
+        if(mp.isPlaying())mp.pause();
         super.onPause();
         //sensorManager.unregisterListener(proximitySensorListener);
+        sensorManager.unregisterListener(SensorListener);
     }
 
     @Override
     public void onStop(){
+        ban = true;
+        atualizarSeekBar.interrupt();
+        if(mp.isPlaying())mp.pause();
         super.onStop();
     }
 
@@ -572,9 +590,10 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         editor.putInt(Duracao,mp.getCurrentPosition());
         editor.putInt(Musica,posicao);
         editor.apply();*/
-        super.onDestroy();
         ban = true;
+        atualizarSeekBar.interrupt();
         mp.stop();
+        super.onDestroy();
             }
 
 }
