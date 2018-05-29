@@ -3,6 +3,7 @@ package com.example.a2061010.ssui_mmp;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -49,6 +50,8 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     int duracao = 0;
     private final float[] accelerometer = new float[3];
     private final float[] magnetic = new float[3];
+    private float[] dadosAcelerometro = new float[20];
+    int ia = 0;
     Thread faceUpDown = new Thread(){
         @Override
         public void run(){ //verifica se num certo intervalo de tempo o telemovel esteve sempre virado para baixo
@@ -58,13 +61,13 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                  final float[] rotationMatrix = new float[9];
                  sensorManager.getRotationMatrix(rotationMatrix, null, accelerometer, magnetic);
                  int inclination = (int) Math.round(Math.toDegrees(Math.acos(rotationMatrix[8])));
-                 Log.i(MODULE, "inclinacao:   " + inclination);
+                 //Log.i(MODULE, "inclinacao:   " + inclination);
                  if (inclination < 160) {
-                     if (!mp.isPlaying()) mp.start();
-                     Log.i(MODULE, "PARA CIMA");
+                    // if (!mp.isPlaying()) mp.start();
+                    // Log.i(MODULE, "PARA CIMA");
                  } else {
-                     if(mp.isPlaying())mp.pause();
-                     Log.i(MODULE, "PARA BAIXO");
+                     //if(mp.isPlaying())mp.pause();
+                     //Log.i(MODULE, "PARA BAIXO");
                  }
              }catch(Exception e)
              {
@@ -445,25 +448,25 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
             SensorListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent sensorEvent) {
-                 /*if(sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
+                /* if(sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
                     if(sensorEvent.values[0] <= 2)
                     {
                         if(mp.isPlaying()) {
                             btnPlay.setImageResource(R.drawable.play);
-                            mp.pause();
+                            if(mp.isPlaying()) mp.pause();
                         }
                     }
                     if(sensorEvent.values[0] > 2)
                     {
                         if(mp != null) {
                             btnPlay.setImageResource(R.drawable.pause);
-                            mp.start();
+                           if(!mp.isPlaying()) mp.start();
                         }
                     }
+                    Log.i(MODULE,"prox: "+sensorEvent.values[0]);
                 }*/
                 if(sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE)
                 {
-
                     //Log.i(MODULE,"X: "+sensorEvent.values[0]);
                     //Log.i(MODULE,"Y: "+sensorEvent.values[1]);
                     //Log.i(MODULE,"Z: "+sensorEvent.values[2]);
@@ -471,18 +474,28 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                 if(sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
                 {
                     System.arraycopy(sensorEvent.values,0,accelerometer,0,accelerometer.length);
-                    /*Log.i(MODULE, "acelerometro: "+sensorEvent.values[2]);
-                    if(sensorEvent.values[2] >= -9)
+                    Log.i(MODULE, "acelerometro: "+sensorEvent.values[2]);
+                    dadosAcelerometro[ia] = sensorEvent.values[2];
+                    ia++;
+                    if(ia >= 7)
                     {
-                        if(!mp.isPlaying())
+                        boolean checkFaceDown = true;
+                        for (int i=0;i<7;i++)
                         {
-                            mp.start();
+                            if(dadosAcelerometro[i] < -10.3 || dadosAcelerometro[i] > -9)
+                                checkFaceDown = false;
+                        }
+                            ia = 0;
+                        if(checkFaceDown)
+                        {
+                            if(mp.isPlaying()) mp.pause();
+                        }
+                        else
+                        {
+                            if(!mp.isPlaying()) mp.start();
                         }
                     }
-                    else
-                    {
-                        mp.pause();
-                    }*/
+
                 }
                 if(sensorEvent.sensor.getType() == Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR)
                 {
@@ -497,8 +510,8 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
 
 // Register it, specifying the polling interval in
 // microseconds
-        /*sensorManager.registerListener(SensorListener,
-                proxSensor, 500);*/
+        sensorManager.registerListener(SensorListener,
+                proxSensor, 500);
         sensorManager.registerListener(SensorListener,gyroscopeSensor,SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(SensorListener,accelerometerSensor,SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(SensorListener,geoMagneticSensor,SensorManager.SENSOR_DELAY_NORMAL);
