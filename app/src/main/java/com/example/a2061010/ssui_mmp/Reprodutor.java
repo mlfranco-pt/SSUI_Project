@@ -2,8 +2,6 @@ package com.example.a2061010.ssui_mmp;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -30,12 +28,12 @@ import java.net.PortUnreachableException;
 import java.util.ArrayList;
 
 public class Reprodutor extends AppCompatActivity  implements View.OnClickListener{
-    static MediaPlayer mp;
+    static MediaPlayer mp;      //mediaplayer
     ArrayList<File> cancoes;
     int posicao,posicaoAtualPref;
     Uri uri;
     String aux = "";
-    private final UIHandler _handler = new UIHandler();
+    private final UIHandler _handler = new UIHandler();     //handlers para mandar msgs
     private final UIHandler _handler2 = new UIHandler();
     ImageButton btnff,btnPv, btnfb, btnNext, btnPlay;
     ImageButton btnPlaylist;
@@ -47,10 +45,10 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     SensorEventListener SensorListener;
     ImageView imgvinil;
 
-    float angle = 0;
-    private static final String MODULE = "Reprodutor";
-    boolean ban=false;
-    int posicaoAtual = 0;
+    float angle = 0;                                    //angulo do vinil
+    private static final String MODULE = "Reprodutor";  //para mandar logs
+    boolean ban=false;      //para definir se a thread acabou
+    int posicaoAtual = 0;   //
     int duracao = 0;
     private final float[] accelerometer = new float[3];
     private final float[] magnetic = new float[3];
@@ -59,83 +57,6 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     int timeAcelerometro1 = 0;
     int timeAcelerometro2 = 0;
     float historiaAcelerometro;
-    Thread faceUpDown = new Thread(){
-        @Override
-        public void run(){ //verifica se num certo intervalo de tempo o telemovel esteve sempre virado para baixo
-          while(true)
-          {
-             try {
-                 final float[] rotationMatrix = new float[9];
-                 sensorManager.getRotationMatrix(rotationMatrix, null, accelerometer, magnetic);
-                 int inclination = (int) Math.round(Math.toDegrees(Math.acos(rotationMatrix[8])));
-                 //Log.i(MODULE, "inclinacao:   " + inclination);
-                 if (inclination < 160) {
-                    // if (!mp.isPlaying()) mp.start();
-                    // Log.i(MODULE, "PARA CIMA");
-                 } else {
-                     //if(mp.isPlaying())mp.pause();
-                     //Log.i(MODULE, "PARA BAIXO");
-                 }
-             }catch(Exception e)
-             {
-                 e.printStackTrace();
-             }
-          }
-
-            /*  boolean t = true;
-            int iteracoes = 0;
-            int[] amostras = new int[20];
-            boolean has = false;
-            try {
-                while (t) {
-                    sleep(25);
-                    if (iteracoes >= 19) {
-                        for (int i=0;i<iteracoes;i++) {
-                               if(amostras[i] <= 150)
-                                   has = true;
-                        }
-                        if(!has)
-                        {
-                            mp.pause();
-                        }
-                        else
-                        {
-                            if(!mp.isPlaying())mp.start();
-                        }
-                        has = false;
-                        iteracoes = 0;
-                    } else {
-                        final float[] rotationMatrix = new float[9];
-                        sensorManager.getRotationMatrix(rotationMatrix, null, accelerometer, magnetic);
-                        int inclination = (int) Math.round(Math.toDegrees(Math.acos(rotationMatrix[8])));
-                        amostras[iteracoes] = inclination;
-                        Log.i(MODULE,"inclinacao:   "+amostras[iteracoes]);
-                        iteracoes++;
-
-                        /*if (inclination < 90) {
-                            if (!mp.isPlaying()) mp.start();
-                            Log.i(MODULE, "PARA CIMA");
-                        } else {
-                            mp.pause();
-                            Log.i(MODULE, "PARA BAIXO");
-                        }
-                        final float[] orientationAngles = new float[3];
-                        sensorManager.getOrientation(rotationMatrix, orientationAngles);
-                        Log.i(MODULE, "----------------------------");
-                        Log.i(MODULE, "valor0  " + orientationAngles[0]);
-                        Log.i(MODULE, "valor1  " + orientationAngles[1]);
-                        Log.i(MODULE, "valor2  " + orientationAngles[2]);
-                        Log.i(MODULE, "----------------------------");
-
-                    }
-                }
-            }catch (Exception e)
-            {
-                e.printStackTrace();
-            }*/
-        }
-
-    };
 
     Thread atualizarSeekBar = new Thread(){
         @Override
@@ -184,16 +105,11 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reprodutor);
-        /*sharedpreferences = getSharedPreferences(mypreference, Context.MODE_PRIVATE);
-        if (sharedpreferences.contains(Duracao)) {
-            posicaoAtualPref = sharedpreferences.getInt(Duracao, 0);
-        }*/
-        faceUpDown.start();
         sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
         proxSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-        gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        //gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        geoMagneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
+        //geoMagneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
 
         btnPlay= (ImageButton) findViewById(R.id.btnPlay);
         btnfb= (ImageButton) findViewById(R.id.btnfb);
@@ -215,54 +131,6 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
 
         sb = (SeekBar) findViewById(R.id.sb);
 
-        /*atualizarSeekBar = new Thread(){
-            @Override
-            public void run(){
-                boolean ban=false;
-
-
-                while(ban == false) {
-                    while(mp == null)
-                    {}
-                    int duracao = 0;
-                            duracao = mp.getDuration();
-                        sb.setMax(duracao);
-
-                    duracao -= 60;
-                    Log.i(MODULE,"--------------------------duracao----------------------------: "+duracao);
-                    int posicaoAtual = 0;
-                    //int execucao = 0;
-                    while (posicaoAtual < (duracao-60)) {
-
-                        try {
-                            sleep(100);
-                            posicaoAtual = mp.getCurrentPosition();
-                      //      Log.i(MODULE,"????????????????posicaoAtual: "+posicaoAtual);
-                            sb.setProgress(posicaoAtual);
-                            //execucao = sb.getProgress();
-                            //aux = getHRM(execucao);
-                            Message msg2 = new Message();
-                            msg2.arg1 = 2;
-                            _handler2.sendMessage(msg2);
-                            //continua.setText(aux.toString().trim());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            //posicaoAtual = duracao;
-                        }
-
-                    }
-                    Log.i(MODULE,"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<atual: "+posicaoAtual);
-                    Message msg1 = new Message();//next cancao
-                    msg1.arg1 = 1;
-                    _handler.sendMessage(msg1);
-                    try {
-                        sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        };*/
         ban = true;
         if(mp!= null)
         {
@@ -274,10 +142,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
             Intent i = getIntent();
             Bundle b = i.getExtras();
             cancoes = (ArrayList) b.getParcelableArrayList("cancoes");
-            //if(!sharedpreferences.contains(Musica))
-                posicao = (int) b.getInt("pos",0);
-           /* else
-                posicao = sharedpreferences.getInt(Musica,0);*/
+            posicao = (int) b.getInt("pos",0);
             uri = Uri.parse(cancoes.get(posicao).toString());
             nome.setText(cancoes.get(posicao).getName().toString());
             mp = MediaPlayer.create(getApplication(),uri);
@@ -317,7 +182,6 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
             if(msg.arg1 == 1)
             {
                 NextCancao();
-                //atualizarSeekBar.start();
             }
             if(msg.arg1 == 2)
             {
@@ -334,7 +198,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
             }
         }
     }
-    private String getHRM(int miliseconds){
+    private String getHRM(int miliseconds){ //retorna uma entrada de milissegundos num texto dividido em minutos,segundos,...
         int seconds = (int) (miliseconds/1000) % 60;
         int minutes = (int) ((miliseconds/ (1000*60)) % 60);
         int hours = (int) ((miliseconds/(1000*60*60)) %24);
@@ -381,30 +245,20 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     public void NextCancao(){
         if(mp.isPlaying())
         mp.stop();
-
         mp.release();
         mp = null;
         posicao = (posicao +1) % cancoes.size();
         nome.setText(cancoes.get(posicao).getName().toString());
-
         uri = Uri.parse(cancoes.get(posicao).toString());
         mp = MediaPlayer.create(getApplicationContext(),uri);
         mp.start();
-
-
         sb.setMax(0);
         duracaoCancao.setText(getHRM(mp.getDuration()));
-        try{
-            sb.setMax(mp.getDuration());
-        }catch (Exception e){
-
-        }
+        try{sb.setMax(mp.getDuration());}catch (Exception e){}
         duracao = mp.getDuration();
         sb.setMax(duracao);
         atualizarSeekBar.start();
     }
-
-
 
     public void PrevCancao(){
         if(mp.isPlaying())
@@ -419,17 +273,10 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         nome.setText(cancoes.get(posicao).getName().toString());
         uri = Uri.parse(cancoes.get(posicao).toString());
         mp = MediaPlayer.create(getApplicationContext(),uri);
-
-
-            mp.start();
-
+        mp.start();
         sb.setMax(0);
         duracaoCancao.setText(getHRM(mp.getDuration()));
-        try{
-            sb.setMax(mp.getDuration());
-        }catch (Exception e){
-
-        }
+        try{sb.setMax(mp.getDuration());}catch (Exception e){e.printStackTrace();}
         duracao = mp.getDuration();
         sb.setMax(duracao);
         atualizarSeekBar.start();
@@ -441,21 +288,16 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
             audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
             sk_volume.setMax(audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC));
             sk_volume.setProgress(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC));
-
             sk_volume.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                     audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, progress,0);
                 }
-
                 @Override
                 public void onStartTrackingTouch(SeekBar seekBar) {
-
                 }
-
                 @Override
                 public void onStopTrackingTouch(SeekBar seekBar) {
-
                 }
             });
         }catch (Exception e)
@@ -467,28 +309,10 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     @Override
     public void onResume(){
         super.onResume();
-        //if(mp != null && !mp.isPlaying()) mp.start();
         // Create listener
             SensorListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent sensorEvent) {
-                /* if(sensorEvent.sensor.getType() == Sensor.TYPE_PROXIMITY) {
-                    if(sensorEvent.values[0] <= 2)
-                    {
-                        if(mp.isPlaying()) {
-                            btnPlay.setImageResource(R.drawable.play);
-                            if(mp.isPlaying()) mp.pause();
-                        }
-                    }
-                    if(sensorEvent.values[0] > 2)
-                    {
-                        if(mp != null) {
-                            btnPlay.setImageResource(R.drawable.pause);
-                           if(!mp.isPlaying()) mp.start();
-                        }
-                    }
-                    Log.i(MODULE,"prox: "+sensorEvent.values[0]);
-                }*/
                 if(sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE)
                 {
                     //Log.i(MODULE,"X: "+sensorEvent.values[0]);
@@ -497,7 +321,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                 }
                 if(sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
                 {
-                    System.arraycopy(sensorEvent.values,0,accelerometer,0,accelerometer.length);
+                    //System.arraycopy(sensorEvent.values,0,accelerometer,0,accelerometer.length);
                     //Log.i(MODULE,"ZZZZZZZZZ: "+sensorEvent.values[2]);
 
                     dadosAcelerometro[ia] = sensorEvent.values[2];
@@ -507,7 +331,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                         boolean checkFaceDown = true;
                         for (int i=0;i<7;i++)
                         {
-                            if(dadosAcelerometro[i] < -10.3 || dadosAcelerometro[i] > -9)
+                            if(dadosAcelerometro[i] < -10.4 || dadosAcelerometro[i] > -8.7)
                                 checkFaceDown = false;
                         }
                             ia = 0;
@@ -520,35 +344,29 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                             if(!mp.isPlaying()) mp.start();
                         }
                     }
-                   /* if(timeAcelerometro1 == 5) {
+                    if(timeAcelerometro1 == 5) {
                         historiaAcelerometro = sensorEvent.values[0];
+                        Log.i(MODULE,"TIME1111111111111111111111");
                     }
-
                     if(timeAcelerometro2 >= 10)
                     {
                         float agora = sensorEvent.values[0];
                         float dif = historiaAcelerometro - agora;
-                        if (dif > 2) {
+                        if (dif > 10) {
                             ban = true;
                             NextCancao();
                         }
-                        if (dif < -2) {
+                        if (dif < -10) {
                             ban = true;
                             PrevCancao();
                         }
                         Log.i(MODULE,"antes: "+historiaAcelerometro+"                 depois: "+sensorEvent.values[0]+"       dif: "+dif);
                         timeAcelerometro1 = 0;
                         timeAcelerometro2 = 0;
+                        Log.i(MODULE,"TIME22222222222222222222");
                     }
                     timeAcelerometro1++;
                     timeAcelerometro2++;
-
-
-*/
-                }
-                if(sensorEvent.sensor.getType() == Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR)
-                {
-                    System.arraycopy(sensorEvent.values,0,magnetic,0,magnetic.length);
                 }
             }
 
@@ -557,13 +375,11 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
             }
         };
 
-// Register it, specifying the polling interval in
-// microseconds
+// Register it, specifying the polling interval in microseconds
         sensorManager.registerListener(SensorListener,
                 proxSensor, 500);
-        sensorManager.registerListener(SensorListener,gyroscopeSensor,SensorManager.SENSOR_DELAY_NORMAL);
+        //sensorManager.registerListener(SensorListener,gyroscopeSensor,SensorManager.SENSOR_DELAY_NORMAL);
         sensorManager.registerListener(SensorListener,accelerometerSensor,SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(SensorListener,geoMagneticSensor,SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
@@ -571,8 +387,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         atualizarSeekBar.interrupt();
         if(mp.isPlaying())mp.pause();
         super.onPause();
-        //sensorManager.unregisterListener(proximitySensorListener);
-        sensorManager.unregisterListener(SensorListener);
+        sensorManager.unregisterListener(SensorListener); //desativa os sensores quando a atividade entre em onPause()
     }
 
     @Override
@@ -583,17 +398,11 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         super.onStop();
     }
 
-
     @Override
     public void onDestroy(){
-       /* SharedPreferences.Editor editor = sharedpreferences.edit();
-        editor.putInt(Duracao,mp.getCurrentPosition());
-        editor.putInt(Musica,posicao);
-        editor.apply();*/
         ban = true;
         atualizarSeekBar.interrupt();
         mp.stop();
         super.onDestroy();
-            }
-
+    }
 }
