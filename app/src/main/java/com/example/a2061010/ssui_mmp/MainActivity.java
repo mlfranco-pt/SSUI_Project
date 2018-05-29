@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
             final ArrayList<File> cancaos = BuscaMusica(Environment.getExternalStorageDirectory().getAbsoluteFile());
             itens = new String[cancaos.size()];
             for (int i = 0; i < cancaos.size(); i++) {
-                itens[i] = cancaos.get(i).getName().toString().replace("mp3", "").toLowerCase();
+                itens[i] = i+" "+cancaos.get(i).getName().toString().replace("mp3", "").toLowerCase();
                 Uri uri = Uri.parse(cancaos.get(i).getAbsolutePath());
                 MediaMetadataRetriever mmr = new MediaMetadataRetriever();
                 mmr.setDataSource(getApplicationContext(),uri);

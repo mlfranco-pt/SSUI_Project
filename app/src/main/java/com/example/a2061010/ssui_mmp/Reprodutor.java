@@ -22,6 +22,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,8 +59,13 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     int timeAcelerometro1 = 0;
     int timeAcelerometro2 = 0;
     float historiaAcelerometro;
-    double anguloAcelerometro = 0;
-    int timeverifica = 0;
+    double[] anguloAcelerometro = new double[2];
+    int timeverifica = 1;
+    float[] teste1 = new float[5];
+    double[] teste2 = new double[5];
+    boolean trueVerificacaoSeguinte = true;
+    boolean trueVerificacaoAnterior = true;
+    int tempoDesativado = 0;
     Thread atualizarSeekBar = new Thread(){
         @Override
         public void run() {
@@ -146,7 +152,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
             cancoes = (ArrayList) b.getParcelableArrayList("cancoes");
             posicao = (int) b.getInt("pos",0);
             uri = Uri.parse(cancoes.get(posicao).toString());
-            nome.setText(cancoes.get(posicao).getName().toString());
+            nome.setText(posicao+" "+cancoes.get(posicao).getName().toString());
             mp = MediaPlayer.create(getApplication(),uri);
             duracao = mp.getDuration();
             atualizarSeekBar.start();
@@ -250,7 +256,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         mp.release();
         mp = null;
         posicao = (posicao +1) % cancoes.size();
-        nome.setText(cancoes.get(posicao).getName().toString());
+        nome.setText(posicao+" "+cancoes.get(posicao).getName().toString());
         uri = Uri.parse(cancoes.get(posicao).toString());
         mp = MediaPlayer.create(getApplicationContext(),uri);
         mp.start();
@@ -272,7 +278,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         } else{
             posicao = posicao-1;
         }
-        nome.setText(cancoes.get(posicao).getName().toString());
+        nome.setText(posicao+" "+cancoes.get(posicao).getName().toString());
         uri = Uri.parse(cancoes.get(posicao).toString());
         mp = MediaPlayer.create(getApplicationContext(),uri);
         mp.start();
@@ -349,25 +355,99 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                     //if(sensorEvent.values[0] < -25 ||sensorEvent.values[0] > 25)
                     //Log.i(MODULE,"acele: "+sensorEvent.values[0]);
                     //Log.i(MODULE,"angulo:   "+ Math.atan2(sensorEvent.values[0], sensorEvent.values[1])/(Math.PI/180));
+                    if(tempoDesativado > 10) {
+                        teste1[timeverifica] = sensorEvent.values[0];
+                        teste2[timeverifica] = Math.atan2(teste1[timeverifica], sensorEvent.values[1]) / (Math.PI / 180);
+                        Log.i(MODULE, "aceleracao     " + teste1[timeverifica]);
+                        //verificacao dos angulos
+                        if (teste2[timeverifica] > teste2[timeverifica - 1] || teste2[timeverifica] + 10 > teste2[timeverifica - 1] || teste2[timeverifica] > 0) //angulo
+                        {
+                            trueVerificacaoSeguinte = false;
+                        }
+                        if(teste2[timeverifica] < teste2[timeverifica - 1] || teste2[timeverifica] - 10 < teste2[timeverifica - 1] || teste2[timeverifica] < 0)
+                        {
+                            trueVerificacaoAnterior = false;
+                        }
+                        //verificacao da aceleracao
+                        if(teste1[timeverifica] < teste1[timeverifica-1] || teste1[timeverifica]<0 || teste1[timeverifica]-1<teste1[timeverifica-1])
+                            trueVerificacaoAnterior = false;
+                        if(teste1[timeverifica] > teste1[timeverifica-1] || teste1[timeverifica]>0 || teste1[timeverifica]+1>teste1[timeverifica-1])
+                            trueVerificacaoSeguinte = false;
+                        timeverifica++;
+                        if (timeverifica == 3) {
+                            if (trueVerificacaoSeguinte) {
+                                ban = true;
+                                NextCancao();
+                                Toast.makeText(Reprodutor.this, "SEGUINTE", Toast.LENGTH_SHORT).show();
+                                tempoDesativado = 0;
+                            }
+                            if (trueVerificacaoAnterior) {
+                                ban = true;
+                                PrevCancao();
+                                Toast.makeText(Reprodutor.this, "ANTERIOR", Toast.LENGTH_SHORT).show();
+                                tempoDesativado = 0;
+                            }
+                            timeverifica = 1;
+                            trueVerificacaoSeguinte = true;
+                            trueVerificacaoAnterior = true;
+                            teste1[0] = sensorEvent.values[0];
+                            teste2[0] = Math.atan2(teste1[0], sensorEvent.values[1]) / (Math.PI / 180);
+                        /*double anteriorAngulo = teste2[0];
+                        float anteriorAce = teste1[0];
+                        boolean trueVerificacaoSeguinte = true;
+                     //   Log.i(MODULE,"angulo[0]: "+teste2[0]);
+                       // Log.i(MODULE,"forca[0]: "+teste1[0]);
+                      /*  for (int i = 1; i<4;i++)
+                        {
+                            if(teste1[i] > teste1[i-1]) //aceleracao
+                            {
+                                trueVerificacaoSeguinte = false;
+                            }
+                            if(teste2[i]>teste2[i-1]) //angulo
+                            {
+                                trueVerificacaoSeguinte = false;
+                            }
+                            //Log.i(MODULE,"angulo["+i+"]: "+teste2[i]);
+                            Log.i(MODULE,"forca["+i+"]: "+teste1[i]);
+                        }*/
+                       /* if(!trueVerificacaoSeguinte)
+                        {
+                            ban = true;
+                            NextCancao();
+                            Toast.makeText(Reprodutor.this, "SEGUINTE", Toast.LENGTH_SHORT).show();
+                        }
+                        timeverifica = 0;*/
+                        }
+                    }
+                    tempoDesativado++;
+                            /*
                     if(timeverifica > 20) {
                         if (timeAcelerometro1 == 1) {
                             historiaAcelerometro = sensorEvent.values[0];
+                            anguloAcelerometro[0] = Math.atan2(historiaAcelerometro, sensorEvent.values[1])/(Math.PI/180);
                         }
                         if (timeAcelerometro2 >= 2) {
                             float agora = sensorEvent.values[0];
                             float dif = historiaAcelerometro - agora;
-                            anguloAcelerometro = Math.atan2(historiaAcelerometro, sensorEvent.values[1])/(Math.PI/180);
-                            Log.i(MODULE, "angulo:  "+anguloAcelerometro+"       dif: " + dif);
-                            if (dif > 15 && anguloAcelerometro > 15) {
+                            anguloAcelerometro[1] = Math.atan2(agora, sensorEvent.values[1])/(Math.PI/180);
+                            if(anguloAcelerometro[1] < 0 && anguloAcelerometro[0] < 15) //&& anguloAcelerometro[1] < anguloAcelerometro[0])
+                                Log.i(MODULE, "SEGUINTE angulo0:  "+anguloAcelerometro[0]+"   angulo1:  "+anguloAcelerometro[1]+"       dif: " + dif);
+                           // if(anguloAcelerometro[1] > 15 && anguloAcelerometro[0] > 15 && anguloAcelerometro[1] > anguloAcelerometro[0])
+                             //   Log.i(MODULE, "ANTERIOR angulo0:  "+anguloAcelerometro[0]+"   angulo1:  "+anguloAcelerometro[1]+"       dif: " + dif);
+                            if (dif > 10 && anguloAcelerometro[1] < 0 && anguloAcelerometro[0] < 15){ //&& anguloAcelerometro[1] < anguloAcelerometro[0]) {
                                 ban = true;
                                 NextCancao();
                                 timeverifica = 0;
-
+                                Log.i(MODULE, "SEGUINTE angulo0:  "+anguloAcelerometro[0]+"   angulo1:  "+anguloAcelerometro[1]+"       dif: " + dif);
+                                Toast.makeText(Reprodutor.this, "SEGUINTE", Toast.LENGTH_SHORT).show();
                             }
-                            if (dif < -15 && anguloAcelerometro < -15) {
+                            if (dif < -10 && anguloAcelerometro[1] > 0 && anguloAcelerometro[0] > -15){// && anguloAcelerometro[1] > anguloAcelerometro[0]) {
                                 ban = true;
                                 PrevCancao();
                                 timeverifica = 0;
+                                Log.i(MODULE, "ANTERIOR angulo0:  "+anguloAcelerometro[0]+"   angulo1:  "+anguloAcelerometro[1]+"       dif: " + dif);
+                                Toast.makeText(Reprodutor.this, "ANTERIOR", Toast.LENGTH_SHORT).show();
+
                                // Log.i(MODULE, "antes: " + historiaAcelerometro + "                 depois: " + sensorEvent.values[0] + "       dif: " + dif);
                             }
                             timeAcelerometro1 = 0;
@@ -376,7 +456,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                         timeAcelerometro1++;
                         timeAcelerometro2++;
                     }
-                    timeverifica++;
+                    timeverifica++;*/
                 }
             }
 
