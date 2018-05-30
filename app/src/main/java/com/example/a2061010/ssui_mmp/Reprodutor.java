@@ -16,6 +16,8 @@ import android.os.Message;
 import android.support.annotation.DrawableRes;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.MonthDisplayHelper;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -47,6 +49,10 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     SensorEventListener SensorListener;
     ImageView imgvinil;
 
+    private boolean houveActionUp = false;
+    private boolean detectSensors = false;
+    private long timeOnActionDown;
+    private int duracaoLongClick = 3000;
     float angle = 0;                                    //angulo do vinil
     private static final String MODULE = "Reprodutor";  //para mandar logs
     boolean ban=false;      //para definir se a thread acabou
@@ -66,10 +72,10 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     boolean trueVerificacaoSeguinte = true;
     boolean trueVerificacaoAnterior = true;
     int tempoDesativado = 0;
+
     Thread atualizarSeekBar = new Thread(){
         @Override
         public void run() {
-            imgvinil = (ImageView)findViewById(R.id.imgvinil);
             int duracaoThread = duracao;
             posicaoAtual = 0;
             ban = false;
@@ -114,11 +120,55 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reprodutor);
         sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
-        proxSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+        //proxSensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
         //gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         //geoMagneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
-
+        imgvinil = (ImageView)findViewById(R.id.imgvinil);
+        imgvinil.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() == MotionEvent.ACTION_DOWN){
+                    timeOnActionDown = (long) System.currentTimeMillis();
+                    houveActionUp = false;
+                }
+                if(!houveActionUp) {
+                    if ((System.currentTimeMillis() - timeOnActionDown) > duracaoLongClick) {
+                        if (!detectSensors) {
+                            Toast.makeText(Reprodutor.this, "Sensores ativados", Toast.LENGTH_SHORT).show();
+                            detectSensors = true;
+                            sensorManager.registerListener(SensorListener,accelerometerSensor,SensorManager.SENSOR_DELAY_NORMAL);
+                        } else {
+                            Toast.makeText(Reprodutor.this, "Sensores desativados", Toast.LENGTH_SHORT).show();
+                            detectSensors = false;
+                            sensorManager.unregisterListener(SensorListener);
+                        }
+                        houveActionUp = true;
+                        return false;
+                    }
+                }
+                /*if(event.getAction() == MotionEvent.ACTION_UP){
+                    if((System.currentTimeMillis() - timeOnActionDown) > duracaoLongClick)
+                    {
+                        if(!detectSensors) {
+                            Toast.makeText(Reprodutor.this, "Sensores ativados", Toast.LENGTH_SHORT).show();
+                            detectSensors = true;
+                        }
+                        else
+                        {
+                            Toast.makeText(Reprodutor.this, "Sensores desativados", Toast.LENGTH_SHORT).show();
+                            detectSensors = false;
+                        }
+                        return false;
+                    }
+                    else{
+                        Toast.makeText(Reprodutor.this, "Short press"+(System.currentTimeMillis() - timeOnActionDown), Toast.LENGTH_SHORT).show();
+                        return true;
+                    }
+                }*/
+                return true;
+            }
+        });
         btnPlay= (ImageButton) findViewById(R.id.btnPlay);
         btnfb= (ImageButton) findViewById(R.id.btnfb);
         btnff = (ImageButton) findViewById(R.id.btnff);
@@ -250,6 +300,8 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         }
     }
 
+
+
     public void NextCancao(){
         if(mp.isPlaying())
         mp.stop();
@@ -346,52 +398,96 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                         if(checkFaceDown)
                         {
                             if(mp.isPlaying()) mp.pause();
+                            btnPlay.setImageResource(R.drawable.play);
                         }
                         else
                         {
                             if(!mp.isPlaying()) mp.start();
+                            btnPlay.setImageResource(R.drawable.pause);
                         }
                     }
                     //if(sensorEvent.values[0] < -25 ||sensorEvent.values[0] > 25)
                     //Log.i(MODULE,"acele: "+sensorEvent.values[0]);
                     //Log.i(MODULE,"angulo:   "+ Math.atan2(sensorEvent.values[0], sensorEvent.values[1])/(Math.PI/180));
                     if(tempoDesativado > 10) {
-                        teste1[timeverifica] = sensorEvent.values[0];
-                        teste2[timeverifica] = Math.atan2(teste1[timeverifica], sensorEvent.values[1]) / (Math.PI / 180);
-                        Log.i(MODULE, "aceleracao     " + teste1[timeverifica]);
-                        //verificacao dos angulos
-                        if (teste2[timeverifica] > teste2[timeverifica - 1] || teste2[timeverifica] + 10 > teste2[timeverifica - 1] || teste2[timeverifica] > 0) //angulo
-                        {
-                            trueVerificacaoSeguinte = false;
-                        }
-                        if(teste2[timeverifica] < teste2[timeverifica - 1] || teste2[timeverifica] - 10 < teste2[timeverifica - 1] || teste2[timeverifica] < 0)
-                        {
-                            trueVerificacaoAnterior = false;
-                        }
-                        //verificacao da aceleracao
-                        if(teste1[timeverifica] < teste1[timeverifica-1] || teste1[timeverifica]<0 || teste1[timeverifica]-1<teste1[timeverifica-1])
-                            trueVerificacaoAnterior = false;
-                        if(teste1[timeverifica] > teste1[timeverifica-1] || teste1[timeverifica]>0 || teste1[timeverifica]+1>teste1[timeverifica-1])
-                            trueVerificacaoSeguinte = false;
+                                        if(timeverifica == 0)
+                                        {
+                                            teste1[0] = sensorEvent.values[0];
+                                            teste2[0] = Math.atan2(teste1[0], sensorEvent.values[1]) / (Math.PI / 180);
+                                            if(teste1[0] < -1 || teste2[0] < 5) trueVerificacaoAnterior = false;
+                                            else
+                                            {
+                                                Log.i(MODULE,""+timeverifica+"angulo anterior:  "+teste2[timeverifica]);
+                                                Log.i(MODULE,""+timeverifica+"aceleracao anterior:  "+teste1[timeverifica]);
+                                            }
+                                            if(teste1[0] > 1 || teste2[0] > -5) trueVerificacaoSeguinte = false;
+                                            else
+                                            {
+                                                Log.i(MODULE,""+timeverifica+" angulo seguinte:  "+teste2[timeverifica]);
+                                                Log.i(MODULE,""+timeverifica+"aceleracao seguinte:  "+teste1[timeverifica]);
+                                            }
+                                        }
+                                        else{
+                                            teste1[timeverifica] = sensorEvent.values[0];
+                                            teste2[timeverifica] = Math.atan2(teste1[timeverifica], sensorEvent.values[1]) / (Math.PI / 180);
+                                            //if(sensorEvent.values[2]>0 && )
+                                            //Log.i(MODULE,"z "+sensorEvent.values[2]);
+                                            double valorZ = sensorEvent.values[2];
+                                            if (valorZ < -1 || valorZ > 8) {
+                                                trueVerificacaoSeguinte = false;
+                                                trueVerificacaoAnterior = false;
+                                                Log.i(MODULE, "z " + valorZ);
+                                            } else
+                                            //verificacao dos angulos
+                                            if (teste2[timeverifica] > teste2[timeverifica - 1] || teste2[timeverifica] + 15 > teste2[timeverifica - 1] || teste2[timeverifica] > -1) //angulo
+                                            {
+                                                trueVerificacaoSeguinte = false;
+                                            }
+                                            else
+                                            {
+                                                Log.i(MODULE,""+timeverifica+"angulo seguinte:  "+teste2[timeverifica]);
+                                            }
+                                            if (teste2[timeverifica] < teste2[timeverifica - 1] || teste2[timeverifica] - 15 < teste2[timeverifica - 1] || teste2[timeverifica] < 1) {
+                                                trueVerificacaoAnterior = false;
+                                            }
+                                            else
+                                            {
+                                                Log.i(MODULE,""+timeverifica+"angulo anterior:  "+teste2[timeverifica]);
+                                            }
+                                            //verificacao da aceleracao
+                                            if (teste1[timeverifica] < teste1[timeverifica - 1] || teste1[timeverifica] < -1 || teste1[timeverifica] - 2 < teste1[timeverifica - 1])
+                                                trueVerificacaoAnterior = false;
+                                            else
+                                            {
+                                                Log.i(MODULE,""+timeverifica+"aceleracao anterior:  "+teste1[timeverifica]);
+                                            }
+                                            if (teste1[timeverifica] > teste1[timeverifica - 1] || teste1[timeverifica] > 1 || teste1[timeverifica] + 2 > teste1[timeverifica - 1])
+                                                trueVerificacaoSeguinte = false;
+                                            else
+                                            {
+                                                Log.i(MODULE,""+timeverifica+"aceleracao seguinte:  "+teste1[timeverifica]);
+                                            }
+                                        }
                         timeverifica++;
-                        if (timeverifica == 3) {
+                        if (timeverifica == 2) {
                             if (trueVerificacaoSeguinte) {
                                 ban = true;
                                 NextCancao();
                                 Toast.makeText(Reprodutor.this, "SEGUINTE", Toast.LENGTH_SHORT).show();
                                 tempoDesativado = 0;
+                                trueVerificacaoAnterior = false;
                             }
                             if (trueVerificacaoAnterior) {
                                 ban = true;
                                 PrevCancao();
                                 Toast.makeText(Reprodutor.this, "ANTERIOR", Toast.LENGTH_SHORT).show();
                                 tempoDesativado = 0;
+                                trueVerificacaoSeguinte = false;
                             }
-                            timeverifica = 1;
+                            timeverifica = 0;
                             trueVerificacaoSeguinte = true;
                             trueVerificacaoAnterior = true;
-                            teste1[0] = sensorEvent.values[0];
-                            teste2[0] = Math.atan2(teste1[0], sensorEvent.values[1]) / (Math.PI / 180);
+
                         /*double anteriorAngulo = teste2[0];
                         float anteriorAce = teste1[0];
                         boolean trueVerificacaoSeguinte = true;
@@ -466,18 +562,20 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         };
 
 // Register it, specifying the polling interval in microseconds
-        sensorManager.registerListener(SensorListener,
-                proxSensor, 500);
+        /*sensorManager.registerListener(SensorListener,
+                proxSensor, 500);*/
         //sensorManager.registerListener(SensorListener,gyroscopeSensor,SensorManager.SENSOR_DELAY_NORMAL);
-        sensorManager.registerListener(SensorListener,accelerometerSensor,SensorManager.SENSOR_DELAY_NORMAL);
+        //sensorManager.registerListener(SensorListener,accelerometerSensor,SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
     public void onPause() {
         atualizarSeekBar.interrupt();
         if(mp.isPlaying())mp.pause();
+        if(!detectSensors)
+            sensorManager.unregisterListener(SensorListener); //desativa os sensores quando a atividade entre em onPause()
         super.onPause();
-        sensorManager.unregisterListener(SensorListener); //desativa os sensores quando a atividade entre em onPause()
+
     }
 
     @Override
@@ -485,7 +583,10 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         ban = true;
         atualizarSeekBar.interrupt();
         if(mp.isPlaying())mp.pause();
+        if (!detectSensors)
+            sensorManager.unregisterListener(SensorListener);
         super.onStop();
+
     }
 
     @Override
