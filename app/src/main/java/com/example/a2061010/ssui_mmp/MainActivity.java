@@ -23,10 +23,10 @@ import java.io.File;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-    SharedPreferences sharedPreferences;
+   /* SharedPreferences sharedPreferences;
     public static final String mypreference = "mypref";
     public static final String Duracao = "duracaoAtual";
-    public static final String Musica = "musica";
+    public static final String Musica = "musica";*/
     ListView lista_musicas;
     String[] itens;
     @Override
@@ -66,10 +66,10 @@ public class MainActivity extends AppCompatActivity {
             lista_musicas.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    sharedPreferences = getSharedPreferences(mypreference, Context.MODE_PRIVATE);
+                 /*   sharedPreferences = getSharedPreferences(mypreference, Context.MODE_PRIVATE);
                     SharedPreferences.Editor editor = sharedPreferences.edit();
                     editor.clear();
-                    editor.commit();
+                    editor.commit();*/
                     startActivity(new Intent(getApplicationContext(),Reprodutor.class).putExtra("pos",position).putExtra("cancoes",cancaos));
                 }
             });

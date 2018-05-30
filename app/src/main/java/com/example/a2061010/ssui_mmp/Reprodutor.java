@@ -2,6 +2,7 @@ package com.example.a2061010.ssui_mmp;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -32,6 +33,9 @@ import java.net.PortUnreachableException;
 import java.util.ArrayList;
 
 public class Reprodutor extends AppCompatActivity  implements View.OnClickListener{
+    SharedPreferences sharedPreferences;
+    public static  final String minhasPreferencias = "mypref";
+    public static final String estadoSensores = "sensorsState";
     static MediaPlayer mp;      //mediaplayer
     ArrayList<File> cancoes;
     int posicao,posicaoAtualPref;
@@ -117,6 +121,18 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        sharedPreferences = getSharedPreferences(minhasPreferencias, Context.MODE_PRIVATE);
+           /* try{sensorManager.unregisterListener(SensorListener);
+                if (sharedPreferences.contains(estadoSensores)) {
+                if (sharedPreferences.getString(estadoSensores, "") == "ativado") {
+                    detectSensors= true;
+                    sensorManager.registerListener(SensorListener, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL);
+                } else if (sharedPreferences.getString(estadoSensores, "") == "desativado") {
+                    detectSensors = false;
+                    sensorManager.unregisterListener(SensorListener);
+                }
+            }}catch(Exception e){e.printStackTrace();}*/
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reprodutor);
         sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
@@ -136,10 +152,16 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                     if ((System.currentTimeMillis() - timeOnActionDown) > duracaoLongClick) {
                         if (!detectSensors) {
                             Toast.makeText(Reprodutor.this, "Sensores ativados", Toast.LENGTH_SHORT).show();
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putString(estadoSensores, "ativado");
+                            editor.commit();
                             detectSensors = true;
                             sensorManager.registerListener(SensorListener,accelerometerSensor,SensorManager.SENSOR_DELAY_NORMAL);
                         } else {
                             Toast.makeText(Reprodutor.this, "Sensores desativados", Toast.LENGTH_SHORT).show();
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putString(estadoSensores, "desativado");
+                            editor.commit();
                             detectSensors = false;
                             sensorManager.unregisterListener(SensorListener);
                         }
@@ -554,11 +576,13 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                     }
                     timeverifica++;*/
                 }
+
             }
 
             @Override
             public void onAccuracyChanged(Sensor sensor, int i) {
             }
+
         };
 
 // Register it, specifying the polling interval in microseconds
@@ -566,14 +590,35 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                 proxSensor, 500);*/
         //sensorManager.registerListener(SensorListener,gyroscopeSensor,SensorManager.SENSOR_DELAY_NORMAL);
         //sensorManager.registerListener(SensorListener,accelerometerSensor,SensorManager.SENSOR_DELAY_NORMAL);
+       /* sensorManager.unregisterListener(SensorListener);
+        if(SensorListener != null) {
+            if (sharedPreferences.contains(estadoSensores)) {
+                if (sharedPreferences.getString(estadoSensores, "") == "ativado") {
+                    sensorManager.registerListener(SensorListener, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL);
+                } else if (sharedPreferences.getString(estadoSensores, "") == "desativado") {
+                    sensorManager.unregisterListener(SensorListener);
+                }
+            }
+        }*/
+        //sensorManager.registerListener(SensorListener, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
     @Override
     public void onPause() {
         atualizarSeekBar.interrupt();
         if(mp.isPlaying())mp.pause();
-        if(!detectSensors)
-            sensorManager.unregisterListener(SensorListener); //desativa os sensores quando a atividade entre em onPause()
+        /*sensorManager.unregisterListener(SensorListener);
+        if(sharedPreferences.contains(estadoSensores))
+        {
+            if(sharedPreferences.getString(estadoSensores,"") == "ativado")
+            {
+                sensorManager.registerListener(SensorListener,accelerometerSensor,SensorManager.SENSOR_DELAY_NORMAL);
+            }
+            else if(sharedPreferences.getString(estadoSensores,"") == "desativado")
+            {
+                sensorManager.unregisterListener(SensorListener);
+            }
+        }*/
         super.onPause();
 
     }
@@ -582,9 +627,16 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     public void onStop(){
         ban = true;
         atualizarSeekBar.interrupt();
-        if(mp.isPlaying())mp.pause();
-        if (!detectSensors)
-            sensorManager.unregisterListener(SensorListener);
+        sensorManager.unregisterListener(SensorListener);
+       /* if(SensorListener != null) {
+            if (sharedPreferences.contains(estadoSensores)) {
+                if (sharedPreferences.getString(estadoSensores, "") == "ativado") {
+                    sensorManager.registerListener(SensorListener, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL);
+                } else if (sharedPreferences.getString(estadoSensores, "") == "desativado") {
+                    sensorManager.unregisterListener(SensorListener);
+                }
+            }
+        }*/
         super.onStop();
 
     }
@@ -593,6 +645,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
     public void onDestroy(){
         ban = true;
         atualizarSeekBar.interrupt();
+        sensorManager.unregisterListener(SensorListener);
         mp.stop();
         super.onDestroy();
     }
