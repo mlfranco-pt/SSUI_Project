@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Movie;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -19,6 +20,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.MonthDisplayHelper;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -156,7 +158,6 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                 return true;
             }
         });
-
         btnPlay= (ImageButton) findViewById(R.id.btnPlay);
         btnfb= (ImageButton) findViewById(R.id.btnfb);
         btnff = (ImageButton) findViewById(R.id.btnff);
@@ -340,6 +341,14 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         }
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ((keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP)){
+            sk_volume.setProgress(audioManager.getStreamVolume(AudioManager.STREAM_MUSIC));
+        }
+        return false;
+    }
+
     public void acabaServicoSeekBar(){
         ban = true;
         atualizarSeekBar.interrupt();
@@ -354,6 +363,7 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
             mp.start();
         }
     }
+
 
     public void pauseMusica(){
         if(mp.isPlaying()){ mp.pause();
