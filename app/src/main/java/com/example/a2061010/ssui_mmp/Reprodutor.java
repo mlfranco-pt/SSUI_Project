@@ -231,8 +231,12 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
                 execucao = sb.getProgress();
                 aux = getHRM(execucao);
                 continua.setText(aux.toString().trim());    //tempo atual da musica
-                angle += msg.arg2;  //calcular novo angulo
-                imgvinil.setRotation((float) angle); //definir novo angulo na imagem
+                if(mp != null) {
+                    if (mp.isPlaying()) {
+                        angle += msg.arg2;  //calcular novo angulo
+                        imgvinil.setRotation((float) angle); //definir novo angulo na imagem
+                    }
+                }
             }
             if(msg.arg1 == 3)//posicao inicial da imagem
             {
@@ -292,7 +296,8 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         try{sb.setMax(mp.getDuration());}catch (Exception e){}
         duracao = mp.getDuration();
         sb.setMax(duracao);//?
-        atualizarSeekBar.start();
+    try{        atualizarSeekBar.start();}
+    catch(Exception e){e.printStackTrace();}
     }
 
     public void PrevCancao(){ //cancao anterior
@@ -314,7 +319,8 @@ public class Reprodutor extends AppCompatActivity  implements View.OnClickListen
         try{sb.setMax(mp.getDuration());}catch (Exception e){e.printStackTrace();}
         duracao = mp.getDuration();
         sb.setMax(duracao);
-        atualizarSeekBar.start();
+        try{        atualizarSeekBar.start();}
+        catch(Exception e){e.printStackTrace();}
     }
 
     public void Volume(){//funcao que busca o volume do dispositivo e que muda o volume conforme selecionado na seekbar de volume
